@@ -218,13 +218,47 @@
             }
         });
 
-        socket.on('chat message', function(msg) {
-            const item = document.createElement('li');
-            const color = stringToColor(msg.user);
-            item.innerHTML = `<strong style="color: ${color};">${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        });
+       // Receive chat message (with sound notification)
+socket.on('chat message', function(msg) {
+    const item = document.createElement('li');
+    const color = stringToColor(msg.user);
+    item.innerHTML = `<strong style="color: ${color};">${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+    
+    // 🔔 Play sound ONLY if:
+    // 1. The message is NOT from me
+    // 2. The browser tab is NOT currently focused (user is doing something else)
+    if (msg.user !== myName && document.hidden) {
+       // Use a real sound file (hosted online)
+const notificationSound = new Audio('https://cdn.jsdelivr.net/gh/naptha/naptha.github.io@master/sound.mp3');
+notificationSound.volume = 0.5;
+
+function playNotificationSound() {
+    notificationSound.currentTime = 0; // Reset to start
+    notificationSound.play().catch(err => {
+        console.log('Sound blocked by browser:', err);
+    });
+}
+        // Request permission for browser notifications
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// Show browser notification when receiving a message
+function showBrowserNotification(msg) {
+    if (msg.user === myName) return; // Don't notify for own messages
+    if (!document.hidden) return; // Only when tab is not focused
+    if (Notification.permission !== 'granted') return;
+    
+    new Notification(`${msg.user} says:`, {
+        body: msg.text,
+        icon: '💬',
+        tag: 'chat-message'
+    });
+}
+    }
+});
 
         // Receive updated user list with online/offline status
         socket.on('user list', function(users) {
@@ -261,6 +295,49 @@
             // Update count to show only online users
             userCount.textContent = onlineCount;
         });
+
+        // 🔔 SOUND NOTIFICATION SYSTEM
+let audioContext = null;
+
+// Initialize audio on first user interaction (required by browsers)
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+// Play a pleasant "ding" sound
+function playNotificationSound() {
+    if (!audioContext) return;
+    
+    // Resume audio context if it's suspended (browser requirement)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Create a nice two-tone "ding" sound
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // First tone (A5)
+    oscillator.frequency.setValueAtTime(1320, audioContext.currentTime + 0.1); // Second tone (E6)
+    
+    // Fade out the volume
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+}
+
+// Initialize audio when user first interacts with the page
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('keydown', initAudio, { once: true });
+        
     </script>
 </body>
 </html>
