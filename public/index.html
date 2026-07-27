@@ -238,8 +238,6 @@ function playNotificationSound() {
     notificationSound.currentTime = 0; // Reset to start
     notificationSound.play().catch(err => {
         console.log('Sound blocked by browser:', err);
-    });
-}
         // Request permission for browser notifications
 if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
@@ -255,6 +253,8 @@ function showBrowserNotification(msg) {
         body: msg.text,
         icon: '💬',
         tag: 'chat-message'
+    });
+}
     });
 }
     }
