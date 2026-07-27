@@ -11,9 +11,6 @@ const io = new Server(server, {
     pingInterval: 10000
 });
 
-// Near the bottom, where you set the port:
-const PORT = process.env.PORT || 3001;
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Track users with their online status
