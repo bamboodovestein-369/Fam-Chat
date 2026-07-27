@@ -1,162 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Simple Chat App</title>
-   <style>
-    * { box-sizing: border-box; }
-    
-    /* CRITICAL FIX: Use dvh (dynamic viewport height) for mobile */
-    html, body {
-        height: 100dvh; /* Dynamic viewport height - works on iOS Safari */
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Prevents double scrollbars */
-    }
-    
-    body { 
-        font-family: Arial, sans-serif; 
-        display: flex; 
-        background: #f4f4f9; 
-    }
-    
-    /* --- SIDEBAR STYLES --- */
-    #sidebar {
-        width: 220px;
-        background: #2c3e50;
-        color: white;
-        padding: 20px;
-        overflow-y: auto;
-        height: 100%;
-    }
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #34495e;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-    }
-    .sidebar-header h2 { margin: 0; font-size: 16px; }
-    #close-sidebar { 
-        display: none;
-        background: transparent; border: none; color: white; 
-        font-size: 24px; cursor: pointer; 
-    }
-    #user-list { list-style: none; padding: 0; margin: 0; }
-    #user-list li {
-        padding: 8px 10px; margin: 4px 0; background: #34495e; 
-        border-radius: 6px; font-size: 14px; display: flex; align-items: center;
-        transition: opacity 0.3s ease;
-    }
-    #user-list li.online::before {
-        content: ''; width: 8px; height: 8px; background: #2ecc71; 
-        border-radius: 50%; margin-right: 8px;
-    }
-    #user-list li.offline {
-        opacity: 0.5;
-        background: #2c3e50;
-    }
-    #user-list li.offline::before {
-        content: ''; width: 8px; height: 8px; background: #95a5a6; 
-        border-radius: 50%; margin-right: 8px;
-    }
-    #user-list li.offline .username {
-        color: #95a5a6;
-    }
-    
-    /* --- MAIN CHAT STYLES --- */
-    #chat-container { 
-        flex: 1; 
-        display: flex; 
-        flex-direction: column;
-        height: 100%; /* CRITICAL: Fill parent height */
-        overflow: hidden;
-    }
-    
-    .top-bar {
-        display: flex; 
-        align-items: center; 
-        padding: 10px; 
-        background: #fff; 
-        border-bottom: 1px solid #ddd;
-        flex-shrink: 0; /* Don't shrink */
-    }
-    .top-bar h1 { margin: 0; flex: 1; text-align: center; font-size: 18px; color: #333; }
-    
-    #toggle-sidebar { 
-        display: none; 
-        padding: 8px 12px; background: #007bff; color: white; 
-        border: none; border-radius: 8px; font-size: 14px; cursor: pointer; 
-    }
-
-    /* CRITICAL: Messages area takes remaining space */
-    #messages { 
-        list-style-type: none; 
-        margin: 0; 
-        padding: 10px; 
-        flex: 1; /* Takes all remaining space */
-        overflow-y: auto; 
-        background: white; 
-        margin: 10px; 
-        border-radius: 8px;
-    }
-    #messages li { 
-        padding: 8px 12px; 
-        margin: 5px 0; 
-        background: #e9ecef; 
-        border-radius: 15px; 
-        max-width: 80%; 
-        word-wrap: break-word;
-    }
-    .timestamp { font-size: 11px; color: #888; margin-left: 8px; }
-    
-    /* CRITICAL: Form stays at bottom */
-    #form { 
-        display: flex; 
-        padding: 10px; 
-        background: #fff; 
-        border-top: 1px solid #ddd;
-        flex-shrink: 0; /* Don't shrink */
-    }
-    #input { 
-        flex: 1; 
-        padding: 10px; 
-        font-size: 16px; /* CRITICAL: 16px prevents iOS zoom */
-        border: 1px solid #ccc; 
-        border-radius: 20px; 
-        outline: none; 
-    }
-    #btn { 
-        padding: 10px 20px; 
-        margin-left: 10px; 
-        background: #007bff; 
-        color: white; 
-        border: none; 
-        border-radius: 20px; 
-        cursor: pointer; 
-        font-size: 16px;
-    }
-
-    /* Mobile responsive */
-    @media (max-width: 768px) {
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: -250px;
-            width: 220px;
-            height: 100dvh; /* Use dvh for mobile */
-            z-index: 1000;
-            transition: left 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    <style>
+        * { box-sizing: border-box; }
+        
+        html, body {
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
-        #sidebar.active { left: 0; }
-        #toggle-sidebar { display: block; }
-        #close-sidebar { display: block; }
-    }
-</style>
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            display: flex; 
+            background: #f4f4f9; 
+        }
+        
+        /* --- SIDEBAR STYLES --- */
+        #sidebar {
+            width: 220px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #34495e;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .sidebar-header h2 { margin: 0; font-size: 16px; }
+        #close-sidebar { 
+            display: none;
+            background: transparent; border: none; color: white; 
+            font-size: 24px; cursor: pointer; 
+        }
+        #user-list { list-style: none; padding: 0; margin: 0; }
+        #user-list li {
+            padding: 8px 10px; margin: 4px 0; background: #34495e; 
+            border-radius: 6px; font-size: 14px; display: flex; align-items: center;
+            transition: opacity 0.3s ease;
+        }
+        #user-list li.online::before {
+            content: ''; width: 8px; height: 8px; background: #2ecc71; 
+            border-radius: 50%; margin-right: 8px;
+        }
+        #user-list li.offline {
+            opacity: 0.5;
+            background: #2c3e50;
+        }
+        #user-list li.offline::before {
+            content: ''; width: 8px; height: 8px; background: #95a5a6; 
+            border-radius: 50%; margin-right: 8px;
+        }
+        #user-list li.offline .username {
+            color: #95a5a6;
+        }
+        
+        /* --- MAIN CHAT STYLES --- */
+        #chat-container { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .top-bar {
+            display: flex; 
+            align-items: center; 
+            padding: 10px; 
+            background: #fff; 
+            border-bottom: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+        .top-bar h1 { margin: 0; flex: 1; text-align: center; font-size: 18px; color: #333; }
+        
+        #toggle-sidebar { 
+            display: none; 
+            padding: 8px 12px; background: #007bff; color: white; 
+            border: none; border-radius: 8px; font-size: 14px; cursor: pointer; 
+        }
+
+        #messages { 
+            list-style-type: none; 
+            margin: 0; 
+            padding: 10px; 
+            flex: 1;
+            overflow-y: auto; 
+            background: white; 
+            margin: 10px; 
+            border-radius: 8px;
+        }
+        #messages li { 
+            padding: 8px 12px; 
+            margin: 5px 0; 
+            background: #e9ecef; 
+            border-radius: 15px; 
+            max-width: 80%; 
+            word-wrap: break-word;
+        }
+        .timestamp { font-size: 11px; color: #888; margin-left: 8px; }
+        
+        #form { 
+            display: flex; 
+            padding: 10px; 
+            background: #fff; 
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
+        }
+        #input { 
+            flex: 1; 
+            padding: 10px; 
+            font-size: 16px;
+            border: 1px solid #ccc; 
+            border-radius: 20px; 
+            outline: none; 
+        }
+        #btn { 
+            padding: 10px 20px; 
+            margin-left: 10px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-size: 16px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: -250px;
+                width: 220px;
+                height: 100dvh;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            }
+            #sidebar.active { left: 0; }
+            #toggle-sidebar { display: block; }
+            #close-sidebar { display: block; }
+        }
+    </style>
 </head>
 <body>
     <div id="sidebar">
@@ -210,6 +206,17 @@
             return `hsl(${hue}, 70%, 45%)`;
         }
 
+        // 🔔 SOUND NOTIFICATION SYSTEM
+        const notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWS57OihUBELTKXh8bllHAU2jNXzzHksBSR3x/DdkEAKFF606etoVhQK');
+        notificationSound.volume = 0.5;
+
+        function playNotificationSound() {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(err => {
+                console.log('Sound could not play:', err);
+            });
+        }
+
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value) {
@@ -218,53 +225,22 @@
             }
         });
 
-       // Receive chat message (with sound notification)
-socket.on('chat message', function(msg) {
-    const item = document.createElement('li');
-    const color = stringToColor(msg.user);
-    item.innerHTML = `<strong style="color: ${color};">${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
-    messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
-    
-    // 🔔 Play sound ONLY if:
-    // 1. The message is NOT from me
-    // 2. The browser tab is NOT currently focused (user is doing something else)
-    if (msg.user !== myName && document.hidden) {
-       // Use a real sound file (hosted online)
-const notificationSound = new Audio('https://cdn.jsdelivr.net/gh/naptha/naptha.github.io@master/sound.mp3');
-notificationSound.volume = 0.5;
+        socket.on('chat message', function(msg) {
+            const item = document.createElement('li');
+            const color = stringToColor(msg.user);
+            item.innerHTML = `<strong style="color: ${color};">${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+            
+            // 🔔 Play sound for messages from OTHER users
+            if (msg.user !== myName) {
+                playNotificationSound();
+            }
+        });
 
-function playNotificationSound() {
-    notificationSound.currentTime = 0; // Reset to start
-    notificationSound.play().catch(err => {
-        console.log('Sound blocked by browser:', err);
-        // Request permission for browser notifications
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-}
-
-// Show browser notification when receiving a message
-function showBrowserNotification(msg) {
-    if (msg.user === myName) return; // Don't notify for own messages
-    if (!document.hidden) return; // Only when tab is not focused
-    if (Notification.permission !== 'granted') return;
-    
-    new Notification(`${msg.user} says:`, {
-        body: msg.text,
-        icon: '💬',
-        tag: 'chat-message'
-    });
-}
-    });
-}
-    }
-});
-
-        // Receive updated user list with online/offline status
         socket.on('user list', function(users) {
             userList.innerHTML = '';
             
-            // Sort: online users first, then offline
             const sortedUsers = users.sort((a, b) => {
                 if (a.online === b.online) return 0;
                 return a.online ? -1 : 1;
@@ -275,7 +251,6 @@ function showBrowserNotification(msg) {
             sortedUsers.forEach(user => {
                 const li = document.createElement('li');
                 
-                // Add 'online' or 'offline' class for styling
                 if (user.online) {
                     li.classList.add('online');
                     onlineCount++;
@@ -283,7 +258,6 @@ function showBrowserNotification(msg) {
                     li.classList.add('offline');
                 }
                 
-                // Create username span for styling
                 const usernameSpan = document.createElement('span');
                 usernameSpan.classList.add('username');
                 usernameSpan.textContent = user.username;
@@ -292,52 +266,8 @@ function showBrowserNotification(msg) {
                 userList.appendChild(li);
             });
             
-            // Update count to show only online users
             userCount.textContent = onlineCount;
         });
-
-        // 🔔 SOUND NOTIFICATION SYSTEM
-let audioContext = null;
-
-// Initialize audio on first user interaction (required by browsers)
-function initAudio() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-}
-
-// Play a pleasant "ding" sound
-function playNotificationSound() {
-    if (!audioContext) return;
-    
-    // Resume audio context if it's suspended (browser requirement)
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Create a nice two-tone "ding" sound
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // First tone (A5)
-    oscillator.frequency.setValueAtTime(1320, audioContext.currentTime + 0.1); // Second tone (E6)
-    
-    // Fade out the volume
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-}
-
-// Initialize audio when user first interacts with the page
-document.addEventListener('click', initAudio, { once: true });
-document.addEventListener('keydown', initAudio, { once: true });
-        
     </script>
 </body>
 </html>
