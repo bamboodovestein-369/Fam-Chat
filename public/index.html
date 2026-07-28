@@ -46,22 +46,10 @@
         #user-list li {
             padding: 8px 10px; margin: 4px 0; background: #34495e; 
             border-radius: 6px; font-size: 14px; display: flex; align-items: center;
-            transition: opacity 0.3s ease;
         }
-        #user-list li.online::before {
+        #user-list li::before {
             content: ''; width: 8px; height: 8px; background: #2ecc71; 
             border-radius: 50%; margin-right: 8px;
-        }
-        #user-list li.offline {
-            opacity: 0.5;
-            background: #2c3e50;
-        }
-        #user-list li.offline::before {
-            content: ''; width: 8px; height: 8px; background: #95a5a6; 
-            border-radius: 50%; margin-right: 8px;
-        }
-        #user-list li.offline .username {
-            color: #95a5a6;
         }
         
         #chat-container { 
@@ -90,13 +78,13 @@
 
         #messages { 
             list-style-type: none; 
-            margin: 0; 
+            margin: 0 10px 10px 10px;
             padding: 10px; 
             flex: 1;
             overflow-y: auto; 
             background: white; 
-            margin: 10px; 
             border-radius: 8px;
+            scroll-behavior: smooth;
         }
         #messages li { 
             padding: 8px 12px; 
@@ -106,6 +94,13 @@
             max-width: 80%; 
             word-wrap: break-word;
         }
+        #messages li img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
         .timestamp { font-size: 11px; color: #888; margin-left: 8px; }
         
         #form { 
@@ -114,6 +109,7 @@
             background: #fff; 
             border-top: 1px solid #ddd;
             flex-shrink: 0;
+            gap: 10px;
         }
         #input { 
             flex: 1; 
@@ -125,7 +121,6 @@
         }
         #btn { 
             padding: 10px 20px; 
-            margin-left: 10px; 
             background: #007bff; 
             color: white; 
             border: none; 
@@ -133,8 +128,19 @@
             cursor: pointer; 
             font-size: 16px;
         }
+        #image-btn {
+            padding: 10px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #image-input {
+            display: none;
+        }
 
-        /* 🔔 Sound toggle button */
         #sound-toggle {
             position: fixed;
             top: 60px;
@@ -195,11 +201,12 @@
         
         <form id="form" action="">
             <input id="input" autocomplete="off" placeholder="Type a message..." />
+            <input type="file" id="image-input" accept="image/*" />
+            <button type="button" id="image-btn">📷</button>
             <button id="btn">Send</button>
         </form>
     </div>
 
-    <!-- 🔔 Sound toggle button -->
     <button id="sound-toggle">🔔 Sound ON</button>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -210,6 +217,8 @@
         const messages = document.getElementById('messages');
         const userList = document.getElementById('user-list');
         const userCount = document.getElementById('user-count');
+        const imageInput = document.getElementById('image-input');
+        const imageBtn = document.getElementById('image-btn');
         
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('toggle-sidebar');
@@ -231,39 +240,97 @@
             return `hsl(${hue}, 70%, 45%)`;
         }
 
-        // 🔔 SOUND NOTIFICATION SYSTEM
+        // 🔔 SOUND SYSTEM
+        let audioCtx = null;
         let soundEnabled = true;
-        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-        notificationSound.volume = 0.6;
-        
-        // Preload the sound
-        notificationSound.load();
+
+        function unlockAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
+        function playNotificationSound() {
+            if (!soundEnabled || !audioCtx) return;
+            
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const now = audioCtx.currentTime;
+            
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(880, now);
+            gain1.gain.setValueAtTime(0.3, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc1.start(now);
+            osc1.stop(now + 0.2);
+            
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1320, now + 0.1);
+            gain2.gain.setValueAtTime(0.001, now);
+            gain2.gain.setValueAtTime(0.3, now + 0.1);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc2.start(now + 0.1);
+            osc2.stop(now + 0.4);
+        }
 
         const soundToggle = document.getElementById('sound-toggle');
-        
         soundToggle.addEventListener('click', function() {
             soundEnabled = !soundEnabled;
             if (soundEnabled) {
                 soundToggle.textContent = '🔔 Sound ON';
                 soundToggle.classList.remove('muted');
-                // Test the sound when enabling
-                notificationSound.currentTime = 0;
-                notificationSound.play().catch(err => console.log('Test sound failed:', err));
+                unlockAudio();
+                playNotificationSound();
             } else {
                 soundToggle.textContent = '🔇 Sound OFF';
                 soundToggle.classList.add('muted');
             }
         });
 
-        function playNotificationSound() {
-            if (!soundEnabled) return;
-            
-            notificationSound.currentTime = 0;
-            notificationSound.play().catch(err => {
-                console.log('Sound could not play:', err);
-            });
+        // 📷 IMAGE UPLOAD
+        imageBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imageData = event.target.result;
+                socket.emit('chat message', { 
+                    user: myName, 
+                    text: '', 
+                    image: imageData 
+                });
+            };
+            reader.readAsDataURL(file);
+            imageInput.value = ''; // Reset
+        });
+
+        // Auto-scroll to bottom
+        function scrollToBottom() {
+            messages.scrollTop = messages.scrollHeight;
         }
 
+        // Send text message
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value) {
@@ -272,48 +339,45 @@
             }
         });
 
+        // Receive message (text or image)
         socket.on('chat message', function(msg) {
             const item = document.createElement('li');
             const color = stringToColor(msg.user);
-            item.innerHTML = `<strong style="color: ${color};">${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
-            messages.appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
             
-            // 🔔 Play sound for messages from OTHER users
+            let content = `<strong style="color: ${color};">${msg.user}:</strong>`;
+            
+            if (msg.text) {
+                content += ` ${msg.text}`;
+            }
+            
+            if (msg.image) {
+                content += `<br><img src="${msg.image}" alt="Image" onclick="window.open(this.src)" />`;
+            }
+            
+            content += ` <span class="timestamp">${msg.timestamp}</span>`;
+            
+            item.innerHTML = content;
+            messages.appendChild(item);
+            scrollToBottom();
+            
             if (msg.user !== myName) {
                 playNotificationSound();
             }
         });
 
+        // User list (only online users now)
         socket.on('user list', function(users) {
             userList.innerHTML = '';
             
-            const sortedUsers = users.sort((a, b) => {
-                if (a.online === b.online) return 0;
-                return a.online ? -1 : 1;
-            });
+            const onlineUsers = users.filter(u => u.online);
             
-            let onlineCount = 0;
-            
-            sortedUsers.forEach(user => {
+            onlineUsers.forEach(user => {
                 const li = document.createElement('li');
-                
-                if (user.online) {
-                    li.classList.add('online');
-                    onlineCount++;
-                } else {
-                    li.classList.add('offline');
-                }
-                
-                const usernameSpan = document.createElement('span');
-                usernameSpan.classList.add('username');
-                usernameSpan.textContent = user.username;
-                li.appendChild(usernameSpan);
-                
+                li.textContent = user.username;
                 userList.appendChild(li);
             });
             
-            userCount.textContent = onlineCount;
+            userCount.textContent = onlineUsers.length;
         });
     </script>
 </body>
