@@ -1,34 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- App icon for iOS home screen -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23007bff'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>💬</text></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+    <meta charset="UTF-8">
+    <!-- ONE clean viewport tag (no duplicates, no broken iOS hacks) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- Fullscreen app mode for iOS -->
+    <!-- iOS Home Screen App Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Simple Chat">
-
-    <!-- Prevent iOS from detecting phone numbers as links -->
     <meta name="format-detection" content="telephone=no">
     
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- App Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23007bff'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>💬</text></svg>">
+    
     <title>Simple Chat App</title>
     <style>
         * { box-sizing: border-box; }
         
-       html, body {
-    height: 100dvh;
-    height: 100vh; /* Fallback for older browsers */
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    padding-bottom: env(safe-area-inset-bottom); /* iOS fix */
-    }
-        
+        html, body {
+            height: 100dvh; /* Dynamic viewport height works perfectly */
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
         
         body { 
             font-family: Arial, sans-serif; 
@@ -36,6 +31,7 @@
             background: #f4f4f9; 
         }
         
+        /* --- SIDEBAR --- */
         #sidebar {
             width: 220px;
             background: #2c3e50;
@@ -68,6 +64,7 @@
             border-radius: 50%; margin-right: 8px;
         }
         
+        /* --- MAIN CHAT --- */
         #chat-container { 
             flex: 1; 
             display: flex; 
@@ -118,79 +115,20 @@
             cursor: pointer;
         }
         .timestamp { font-size: 11px; color: #888; margin-left: 8px; }
-
-     #form { 
-    display: flex; 
-    padding: 10px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* iOS fix */
-    background: #fff; 
-    border-top: 1px solid #ddd;
-    flex-shrink: 0;
-    gap: 8px;
-    align-items: center;
-    }
-    #input { 
-    flex: 1; 
-    min-width: 0; /* CRITICAL: Allows input to shrink */
-    padding: 10px; 
-    font-size: 16px;
-    border: 1px solid #ccc; 
-    border-radius: 20px; 
-    outline: none; 
-    }
-    #btn { 
-    padding: 10px 16px; 
-    background: #007bff; 
-    color: white; 
-    border: none; 
-    border-radius: 20px; 
-    cursor: pointer; 
-    font-size: 14px;
-    white-space: nowrap; /* Prevents text wrapping */
-    }
-    #image-btn {
-    padding: 10px 12px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
-    }
-    #image-input {
-    display: none;
-    }
-
-    /* Mobile responsive form */
-    @media (max-width: 768px) {
-    #form {
-        flex-wrap: wrap; /* Allows wrapping on mobile */
-        gap: 6px;
-    }
-    #input {
-        flex: 1 1 100%; /* Takes full width on first row */
-        order: 1;
-    }
-    #image-btn {
-        order: 2;
-        flex: 0 0 auto;
-    }
-    #btn {
-        order: 3;
-        flex: 0 0 auto;
-    }
         
+        /* --- FORM --- */
         #form { 
             display: flex; 
             padding: 10px; 
             background: #fff; 
             border-top: 1px solid #ddd;
             flex-shrink: 0;
-            gap: 10px;
+            gap: 8px;
+            align-items: center;
         }
         #input { 
             flex: 1; 
+            min-width: 0; 
             padding: 10px; 
             font-size: 16px;
             border: 1px solid #ccc; 
@@ -198,66 +136,28 @@
             outline: none; 
         }
         #btn { 
-            padding: 10px 20px; 
+            padding: 10px 16px; 
             background: #007bff; 
             color: white; 
             border: none; 
             border-radius: 20px; 
             cursor: pointer; 
-            font-size: 16px;
+            font-size: 14px;
+            white-space: nowrap;
         }
         #image-btn {
-            padding: 10px 15px;
+            padding: 10px 12px;
             background: #28a745;
             color: white;
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            white-space: nowrap;
         }
-        #image-input {
-            display: none;
-        }
+        #image-input { display: none; }
 
-        /* Image modal */
-    #image-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 2000;
-    cursor: pointer;
-    justify-content: center;
-    align-items: center;
-    }
-    #image-modal.active {
-    display: flex;
-    }
-    #image-modal img {
-    max-width: 90%;
-    max-height: 90%;
-    border-radius: 8px;
-    }
-    #modal-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    color: white;
-    font-size: 40px;
-    cursor: pointer;
-    background: rgba(0,0,0,0.5);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    }
-        
-        
+        /* --- SOUND TOGGLE --- */
         #sound-toggle {
             position: fixed;
             top: 60px;
@@ -272,30 +172,45 @@
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        #sound-toggle.muted {
-            background: #dc3545;
+        #sound-toggle.muted { background: #dc3545; }
+
+        /* --- IMAGE MODAL --- */
+        #image-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+        }
+        #image-modal.active { display: flex; }
+        #image-modal img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+        #modal-close {
+            position: absolute; top: 20px; right: 20px;
+            color: white; font-size: 40px; cursor: pointer;
+            background: rgba(0,0,0,0.5); width: 50px; height: 50px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
         }
 
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
             #sidebar {
-                position: fixed;
-                top: 0;
-                left: -250px;
-                width: 220px;
-                height: 100dvh;
-                z-index: 1000;
-                transition: left 0.3s ease;
+                position: fixed; top: 0; left: -250px; width: 220px;
+                height: 100dvh; z-index: 1000; transition: left 0.3s ease;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.3);
             }
             #sidebar.active { left: 0; }
             #toggle-sidebar { display: block; }
             #close-sidebar { display: block; }
-            #sound-toggle {
-                top: 60px;
-                right: 10px;
-                font-size: 12px;
-                padding: 8px 12px;
-            }
+            #sound-toggle { top: 60px; right: 10px; font-size: 12px; padding: 8px 12px; }
+            
+            /* Mobile form layout */
+            #form { flex-wrap: wrap; gap: 6px; }
+            #input { flex: 1 1 100%; order: 1; }
+            #image-btn { order: 2; flex: 0 0 auto; }
+            #btn { order: 3; flex: 0 0 auto; }
         }
     </style>
 </head>
@@ -305,223 +220,3 @@
             <h2>👥 Online (<span id="user-count">0</span>)</h2>
             <button id="close-sidebar">✕</button>
         </div>
-        <ul id="user-list"></ul>
-    </div>
-    
-    <div id="chat-container">
-        <div class="top-bar">
-            <button id="toggle-sidebar">👥 Users</button>
-            <h1>💬 Our Family Chat</h1>
-        </div>
-        
-        <ul id="messages"></ul>
-        
-        <form id="form" action="">
-            <input id="input" autocomplete="off" placeholder="Type a message..." />
-            <input type="file" id="image-input" accept="image/*" />
-            <button type="button" id="image-btn">📷</button>
-            <button id="btn">Send</button>
-        </form>
-    </div>
-
-    <button id="sound-toggle">🔔 Sound ON</button>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
-        const messages = document.getElementById('messages');
-        const userList = document.getElementById('user-list');
-        const userCount = document.getElementById('user-count');
-        const imageInput = document.getElementById('image-input');
-        const imageBtn = document.getElementById('image-btn');
-        
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggle-sidebar');
-        const closeBtn = document.getElementById('close-sidebar');
-
-        toggleBtn.addEventListener('click', () => sidebar.classList.add('active'));
-        closeBtn.addEventListener('click', () => sidebar.classList.remove('active'));
-
-        let myName = prompt("Welcome! What is your name?");
-        if (!myName) myName = "Anonymous";
-        socket.emit('set username', myName);
-
-        function stringToColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const hue = Math.abs(hash) % 360;
-            return `hsl(${hue}, 70%, 45%)`;
-        }
-
-        // 🔔 SOUND SYSTEM
-        let audioCtx = null;
-        let soundEnabled = true;
-
-        function unlockAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
-
-        document.addEventListener('click', unlockAudio);
-        document.addEventListener('touchstart', unlockAudio);
-
-        function playNotificationSound() {
-            if (!soundEnabled || !audioCtx) return;
-            
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            
-            const now = audioCtx.currentTime;
-            
-            const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
-            osc1.connect(gain1);
-            gain1.connect(audioCtx.destination);
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(880, now);
-            gain1.gain.setValueAtTime(0.3, now);
-            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc1.start(now);
-            osc1.stop(now + 0.2);
-            
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(1320, now + 0.1);
-            gain2.gain.setValueAtTime(0.001, now);
-            gain2.gain.setValueAtTime(0.3, now + 0.1);
-            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-            osc2.start(now + 0.1);
-            osc2.stop(now + 0.4);
-        }
-
-        const soundToggle = document.getElementById('sound-toggle');
-        soundToggle.addEventListener('click', function() {
-            soundEnabled = !soundEnabled;
-            if (soundEnabled) {
-                soundToggle.textContent = '🔔 Sound ON';
-                soundToggle.classList.remove('muted');
-                unlockAudio();
-                playNotificationSound();
-            } else {
-                soundToggle.textContent = '🔇 Sound OFF';
-                soundToggle.classList.add('muted');
-            }
-        });
-
-        // 📷 IMAGE UPLOAD
-        imageBtn.addEventListener('click', () => {
-            imageInput.click();
-        });
-
-        imageInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imageData = event.target.result;
-                socket.emit('chat message', { 
-                    user: myName, 
-                    text: '', 
-                    image: imageData 
-                });
-            };
-            reader.readAsDataURL(file);
-            imageInput.value = ''; // Reset
-        });
-
-        // Auto-scroll to bottom
-        function scrollToBottom() {
-            messages.scrollTop = messages.scrollHeight;
-        }
-
-        // Send text message
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', { user: myName, text: input.value });
-                input.value = '';
-            }
-        });
-
-        // Receive message (text or image)
-        socket.on('chat message', function(msg) {
-            const item = document.createElement('li');
-            const color = stringToColor(msg.user);
-            
-            let content = `<strong style="color: ${color};">${msg.user}:</strong>`;
-            
-            if (msg.text) {
-                content += ` ${msg.text}`;
-            }
-            
-            if (msg.image) {
-                content += `<br><img src="${msg.image}" alt="Image" class="chat-image" />`;
-            }
-            
-            content += ` <span class="timestamp">${msg.timestamp}</span>`;
-            
-            item.innerHTML = content;
-            messages.appendChild(item);
-            scrollToBottom();
-            
-            if (msg.user !== myName) {
-                playNotificationSound();
-            }
-        });
-
-        // User list (only online users now)
-        socket.on('user list', function(users) {
-            userList.innerHTML = '';
-            
-            const onlineUsers = users.filter(u => u.online);
-            
-            onlineUsers.forEach(user => {
-                const li = document.createElement('li');
-                li.textContent = user.username;
-                userList.appendChild(li);
-            });
-            
-            userCount.textContent = onlineUsers.length;
-        });
-
-// Image modal functionality
-const imageModal = document.getElementById('image-modal');
-const modalImage = document.getElementById('modal-image');
-const modalClose = document.getElementById('modal-close');
-
-// Click on chat image to open modal
-messages.addEventListener('click', function(e) {
-    if (e.target.classList.contains('chat-image')) {
-        modalImage.src = e.target.src;
-        imageModal.classList.add('active');
-    }
-});
-
-// Close modal when clicking X or outside image
-imageModal.addEventListener('click', function(e) {
-    if (e.target === imageModal || e.target === modalClose) {
-        imageModal.classList.remove('active');
-    }
-});
-        
-    </script>
-    <!-- Image modal -->
-<div id="image-modal">
-    <div id="modal-close">✕</div>
-    <img id="modal-image" src="" alt="Full size image" />
-</div>
-</body>
-</html>
