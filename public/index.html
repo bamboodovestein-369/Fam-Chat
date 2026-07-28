@@ -220,3 +220,180 @@
             <h2>👥 Online (<span id="user-count">0</span>)</h2>
             <button id="close-sidebar">✕</button>
         </div>
+        <ul id="user-list"></ul>
+    </div>
+    
+    <div id="chat-container">
+        <div class="top-bar">
+            <button id="toggle-sidebar">👥 Users</button>
+            <h1>💬 Simple Chat</h1>
+        </div>
+        
+        <ul id="messages"></ul>
+        
+        <form id="form" action="">
+            <input id="input" autocomplete="off" placeholder="Type a message..." />
+            <input type="file" id="image-input" accept="image/*" />
+            <button type="button" id="image-btn">📷</button>
+            <button id="btn">Send</button>
+        </form>
+    </div>
+
+    <button id="sound-toggle">🔔 Sound ON</button>
+
+    <!-- Image Modal -->
+    <div id="image-modal">
+        <div id="modal-close">✕</div>
+        <img id="modal-image" src="" alt="Full size image" />
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        const userList = document.getElementById('user-list');
+        const userCount = document.getElementById('user-count');
+        const imageInput = document.getElementById('image-input');
+        const imageBtn = document.getElementById('image-btn');
+        
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const closeBtn = document.getElementById('close-sidebar');
+
+        toggleBtn.addEventListener('click', () => sidebar.classList.add('active'));
+        closeBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+
+        let myName = prompt("Welcome! What is your name?");
+        if (!myName) myName = "Anonymous";
+        socket.emit('set username', myName);
+
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 70%, 45%)`;
+        }
+
+        // 🔔 SOUND SYSTEM
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function unlockAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
+
+        function playNotificationSound() {
+            if (!soundEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const now = audioCtx.currentTime;
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.connect(gain1); gain1.connect(audioCtx.destination);
+            osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now);
+            gain1.gain.setValueAtTime(0.3, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc1.start(now); osc1.stop(now + 0.2);
+            
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            osc2.type = 'sine'; osc2.frequency.setValueAtTime(1320, now + 0.1);
+            gain2.gain.setValueAtTime(0.001, now);
+            gain2.gain.setValueAtTime(0.3, now + 0.1);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc2.start(now + 0.1); osc2.stop(now + 0.4);
+        }
+
+        const soundToggle = document.getElementById('sound-toggle');
+        soundToggle.addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            if (soundEnabled) {
+                soundToggle.textContent = '🔔 Sound ON';
+                soundToggle.classList.remove('muted');
+                unlockAudio(); playNotificationSound();
+            } else {
+                soundToggle.textContent = '🔇 Sound OFF';
+                soundToggle.classList.add('muted');
+            }
+        });
+
+        // 📷 IMAGE UPLOAD
+        imageBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                socket.emit('chat message', { user: myName, text: '', image: event.target.result });
+            };
+            reader.readAsDataURL(file);
+            imageInput.value = '';
+        });
+
+        function scrollToBottom() {
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', { user: myName, text: input.value });
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function(msg) {
+            const item = document.createElement('li');
+            const color = stringToColor(msg.user);
+            let content = `<strong style="color: ${color};">${msg.user}:</strong>`;
+            if (msg.text) content += ` ${msg.text}`;
+            if (msg.image) content += `<br><img src="${msg.image}" alt="Image" class="chat-image" />`;
+            content += ` <span class="timestamp">${msg.timestamp}</span>`;
+            
+            item.innerHTML = content;
+            messages.appendChild(item);
+            scrollToBottom();
+            
+            if (msg.user !== myName) playNotificationSound();
+        });
+
+        socket.on('user list', function(users) {
+            userList.innerHTML = '';
+            const onlineUsers = users.filter(u => u.online);
+            onlineUsers.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.username;
+                userList.appendChild(li);
+            });
+            userCount.textContent = onlineUsers.length;
+        });
+
+        // Image modal
+        const imageModal = document.getElementById('image-modal');
+        const modalImage = document.getElementById('modal-image');
+        const modalClose = document.getElementById('modal-close');
+
+        messages.addEventListener('click', function(e) {
+            if (e.target.classList.contains('chat-image')) {
+                modalImage.src = e.target.src;
+                imageModal.classList.add('active');
+            }
+        });
+
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === imageModal || e.target === modalClose) {
+                imageModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
